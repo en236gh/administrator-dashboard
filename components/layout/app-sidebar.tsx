@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/dashboard", label: "dashboard", icon: HomeIcon },
+  { href: "/scheduling", label: "exam management", icon: AcademicCapIcon },
   { href: "/examinations", label: "examinations", icon: AcademicCapIcon },
   { href: "/attendance", label: "attendance", icon: ClipboardDocumentListIcon },
   { href: "/incidents", label: "incidents", icon: ExclamationTriangleIcon },

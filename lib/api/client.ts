@@ -30,6 +30,8 @@ type RequestOptions = {
   auth?: boolean;
   /** Internal: skip 401 → refresh → retry. */
   _retried?: boolean;
+  /** Scheduling mutations require an explicit user retry. */
+  noRetry?: boolean;
 };
 
 async function parseEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
@@ -126,7 +128,7 @@ export async function apiRequest<T>(
     cache: "no-store",
   });
 
-  if (auth && response.status === 401 && !_retried) {
+  if (auth && response.status === 401 && !_retried && !options.noRetry) {
     const nextToken = await refreshAccessToken();
     if (nextToken) {
       return apiRequest<T>(path, {

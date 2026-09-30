@@ -12,11 +12,11 @@ export type LoginResponse = {
 export type AdminDashboardStats = {
   todaysExaminations?: number;
   todaysExaminationDetails?: Examination[];
-  present?: number;
-  absent?: number;
+  presentStudents?: number;
+  absentStudents?: number;
   attendancePercentage?: number;
   totalIncidents?: number;
-  todaysIncidents?: number;
+  incidentsToday?: number;
   generatedReports?: number;
   venueOccupancy?: VenueOccupancy[];
 };
