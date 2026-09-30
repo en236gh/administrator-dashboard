@@ -1,7 +1,7 @@
 "use server";
 import { apiRequest, ApiError } from "@/lib/api/client";
 
-type Operation = "amendments" | "proposeAmendment" | "decideAmendment" | "applyAmendment" | "notifications" | "retryNotifications" | "requests" | "request" | "decision" | "lecturers" | "capacityDraft" | "list" | "detail" | "create" | "setup" | "courses" | "select" | "generate" | "reset" | "move" | "alternatives" | "staffing" | "assign" | "autoAssign" | "cancel" | "validate" | "publish" | "venues" | "capacity" | "unavailability" | "unavailable" | "audit" | "coordinator" | "history";
+type Operation = "amendments" | "proposeAmendment" | "decideAmendment" | "applyAmendment" | "notifications" | "retryNotifications" | "requests" | "request" | "decision" | "lecturers" | "capacityDraft" | "list" | "detail" | "create" | "setup" | "courses" | "select" | "generate" | "reset" | "move" | "alternatives" | "staffing" | "assign" | "autoAssign" | "cancel" | "validate" | "publish" | "venues" | "capacity" | "unavailability" | "unavailable" | "audit" | "history";
 export async function schedulingAction(operation: Operation, id = 0, body?: unknown, exam = 0, venue = 0, staff = 0) {
   const base = "/api/admin/examination-periods";
   const routes: Record<Operation, [string, string]> = {
@@ -18,7 +18,7 @@ export async function schedulingAction(operation: Operation, id = 0, body?: unkn
     autoAssign:[`${base}/${id}/auto-assign-invigilators`,"POST"], cancel:[`/api/admin/invigilator-assignments/${exam}/${venue}/${staff}/cancel`,"POST"],
     validate:[`${base}/${id}/validation`,"GET"], publish:[`${base}/${id}/publish`,"POST"], venues:[`${base}/venues`,"GET"],
     capacity:[`${base}/venues/${venue}/capacity`,"PUT"], unavailability:[`${base}/venue-unavailability`,"GET"], unavailable:[`${base}/venues/${venue}/unavailability`,"POST"],
-    audit:[`${base}/allocation-audit`,"GET"], coordinator:[`${base}/${id}/coordinator`,"PUT"], history:[`${base}/${id}/history`,"GET"]
+    audit:[`${base}/allocation-audit`,"GET"], history:[`${base}/${id}/history`,"GET"]
   };
   if (!Object.hasOwn(routes,operation)) return {ok:false, message:"Unsupported operation", status:400, data:null};
   const [path,method]=routes[operation];

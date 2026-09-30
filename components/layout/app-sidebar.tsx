@@ -45,7 +45,7 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-2">
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 flex flex-col gap-2">
         {items.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);

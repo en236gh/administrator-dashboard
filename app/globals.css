@@ -58,3 +58,26 @@ body {
 ::selection {
   background: color-mix(in oklab, var(--unza-gold) 35%, white);
 }
+
+/* The current guide step points to the real, usable workflow tab. */
+[data-guide-pointer] {
+  position: relative;
+  outline: 3px solid #b78a28;
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
+}
+[data-guide-pointer]::after {
+  content: attr(data-guide-pointer);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: #172033;
+  color: white;
+  font-size: 12px;
+  pointer-events: none;
+}
+nav[aria-label="Examination workflow"] { row-gap: 2.5rem; padding-top: 2rem; }
