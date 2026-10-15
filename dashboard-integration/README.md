@@ -37,6 +37,11 @@ Student, and Invigilator keep their existing responsibilities.
 
 ## Scheduling Invariants
 
+- Creating a schedule automatically discovers exams, places them, allocates students
+  and assigns invigilators. Review and publish separately. Course selection, draft
+  deletion and reset controls are removed. Deploy with the updated scheduling API;
+  this API change requires no additional schema migration.
+
 - Draft generation never publishes. Publication is an explicit action and is blocked
   by any server validation problem, including student eligibility, venue capacity,
   booking conflicts, allocation mismatch, and invigilator staffing shortages.

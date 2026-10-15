@@ -22,45 +22,56 @@ token.
 The dashboard overview's `venueOccupancy` uses classroom capacity, not examination
 seating capacity. Use period detail and venue `examination_capacity` for exam seating.
 
-## Draft Workflow
+## Generate, Review and Publish
 
-1. Create a period with `POST /api/admin/examination-periods`. The body contains
-   `name`, `semester`, `examType`, `startDate`, `endDate`,
-   `daysOfWeek`, and `slots`. Dates and times use institution-local scheduling time.
-   The backend sets `academic_year` from the latest student-registration year,
-   independently of semester and exam dates. Omit `academicYear` from create and
-   update requests. Existing periods retain their saved year. Show creation HTTP
-   409 messages when registrations are missing or the latest year is malformed.
-2. Configure venue examination capacities with
-   `PUT /api/admin/examination-periods/venues/{venue}/capacity` and record blocked
-   intervals with `POST /api/admin/examination-periods/venues/{venue}/unavailability`.
-3. Select courses/durations with
-   `PUT /api/admin/examination-periods/{id}/courses` using the latest `revision`.
-4. Generate a draft with
-   `POST /api/admin/examination-periods/{id}/generate` and
-   `{ "revision": n, "searchLimit": 100000 }`.
-5. Review generated dates, times, venues, allocations, unallocated students,
-   conflicts and capacity. Generation does not publish.
-6. If needed, edit a draft placement using
-   `PUT /api/admin/examination-periods/{id}/exams/{session}/placement` with
-   `{ "revision": n, "examDate": "YYYY-MM-DD", "startTime": "HH:mm",
-   "venueIds": [1] }`. The server recalculates allocations and validates the draft.
-7. Assign invigilators manually with
-   `POST /api/admin/examination-periods/{id}/invigilators`, or generate them with
-   `POST /api/admin/examination-periods/{id}/auto-assign-invigilators`. Review
-   shortages and assignments. The separate administrator assignment APIs may also
-   be used for eligible legacy/unmanaged examinations.
-8. Load `GET /api/admin/examination-periods/{id}/validation`. Keep Publish disabled
-   while `valid` is false and show every `problems` entry.
-9. Publish explicitly with
-   `POST /api/admin/examination-periods/{id}/publish` and
-   `{ "revision": n }`. The backend validates again and publishes the period,
-   exams and staffing atomically.
+1. Load the academic-year default from
+   `GET /api/admin/examination-periods/defaults` and display it as read-only. The administrator enters
+   semester, exam type, dates, weekdays and daily slots.
+2. **Generate schedule** calls `POST /api/admin/examination-periods` with
+   `name`, `semester`, `examType`, `startDate`,
+   `endDate`, `daysOfWeek`, and `slots`. The backend always uses the latest
+   registration year and ignores client-supplied years. Always display the returned cycle.
+3. One request discovers registered courses, schedules exams and venues, allocates
+   students, and assigns available invigilators. Review timetable and staffing.
+4. Show publication problems from `validation`; generation success alone does
+   not authorize publication. Recheck with `GET /{id}/validation`.
+5. Publish explicitly with `POST /{id}/publish` and `{"revision": n}`.
+   Publication validates again and releases exams, allocations and duties together.
 
-To replace a generated draft, use the explicit
-`POST /api/admin/examination-periods/{id}/reset-draft` operation with the current
-revision, then select courses or regenerate. Explain which draft data will be cleared
-before the user confirms. Do not offer unpublish or ordinary post-publication edits.
+Creation and regeneration return `data.generation.result`,
+`data.generation.period`, `data.staffing` and `data.validation`.
+Preserve the returned period ID and revision even when generation fails.
+Show generation diagnostics, validation problems and staffing
+`understaffedVenueIds`. Disable mutations while a request is pending.
+After a creation transport error, reload the list before retrying.
+
+One schedule per academic year, semester and exam type can be created.
+Open an existing schedule from the list to review or regenerate it; older
+same-cycle records remain available.
+
+## Corrections and Regeneration
+
+Correct registrations, catalogue data, verified venue capacities or unavailable
+intervals, then call `POST /{id}/generate` with
+`{"revision": n, "searchLimit": 100000}`.
+Successful regeneration replaces unpublished exams, allocations and staffing.
+Failed searches preserve the existing timetable, course snapshot and revision.
+Published or operational examinations cannot be regenerated.
+
+Only empty setup records can be edited with `PUT /{id}?revision=n`.
+Generated placements can be edited with `PUT /{id}/exams/{session}/placement`,
+using `revision`, `examDate`, `startTime` and `venueIds`.
+Staffing controls remain available to resolve shortages after staff data is fixed.
+Automatic staffing is already part of generation.
+
+The dashboard has no manual course-selection, exam-duration, draft-delete or
+reset controls. Their obsolete mutation routes are not used.
+
+Only active courses with registrations matching the exact academic year and
+semester become exams. Counts are read-only; programme membership does not create
+students or seats. The backend setting `app.scheduling.exam-duration-minutes`
+controls duration (default 120, range 1–1440). Verified examination capacity
+remains a physical venue limit. Generation never publishes.
 
 ## Change Requests
 
@@ -106,8 +117,8 @@ published timetable editor.
 - Period and JDBC-backed scheduling rows use snake_case field names. Requests use
   camelCase. Do not expect a `coordinator_staff_id` or coordinator capability flag
   in the period response.
-- Use the returned latest `revision` after setup, selection, generation, placement,
-  reset, publication, and applied amendments. Refresh detail after staffing or
+- Use the returned latest `revision` after setup, generation, placement,
+  publication, and applied amendments. Refresh detail after staffing or
   capacity changes before publishing.
 - Generation outcomes include `COMPLETE`, `INVALID_INPUT`,
   `NO_FEASIBLE_ARRANGEMENT`, and `SEARCH_LIMIT_REACHED`. The last three can have
@@ -119,8 +130,8 @@ published timetable editor.
 
 ## Acceptance Checks
 
-- An ordinary active Administrator can create a period, configure courses, generate
-  and edit a draft, staff it, resolve validation blockers, and publish without a
+- An ordinary active Administrator can generate a schedule, review
+  and edit placements, resolve staffing shortages, resolve validation blockers, and publish without a
   period-owner assignment.
 - Publication cannot proceed with validation problems; generation alone never
   publishes.
@@ -130,37 +141,12 @@ published timetable editor.
   increment revision once, retain before/after records and notify affected users.
 - Retrying notifications does not reapply the amendment or change revision.
 
-## In-app Scheduling Guide
+## Workspace
 
-An eight-step popup opens automatically whenever an Administrator enters Exam
-Management, covering setup, venues, courses, generation, allocation review,
-staffing, validation and publication. No launch button is required. Closing the
-popup or pressing Escape leaves the on-page guide active. Numbered steps and
-Back / Next browse instructions; Open navigates to the relevant workflow tab.
-The current step highlights that tab with a visible pointer. Previous step /
-Next step on the instruction card let users continue while working.
+The main workflow is Setup, Timetable, Staffing and Publish. Venues, Requests,
+Amendments and Audit are supporting tools. Discovered courses and student
+allocations are expandable read-only tables. There is no automatic guide popup.
 
-Only explicitly choosing “I’m an expert” disables automatic guidance. This
-preference is stored per Administrator email in this browser, persists across
-logins, and can be reversed with Enable guided mode. Other browsers default to
-guided mode. If browser storage is unavailable, guidance defaults on next visit.
-
-Guide navigation never saves data or marks tasks complete. Publication still
-requires successful validation and the explicit Publish timetable and staffing
-action. Publication success is shown only from the period’s PUBLISHED status.
-The native popup contains keyboard focus and supports Escape dismissal.
-
-## Automatic Student Demand
-
-Display course `eligible_students` and exam `registered_students` as “Registered
-students / required seats”. These read-only counts include all registrations
-matching course, saved academic year and semester for every exam type. Show
-`allocated_students` separately and list `unallocatedStudents` for missing seats.
-Course selection sends only the revision and course codes / durations.
-
-Reload the catalogue after registration changes. Check status / reload also
-refreshes a loaded catalogue. Generation and publication recheck registrations;
-use the explicit draft reset / regeneration workflow when allocations no longer
-match. Generation can split courses across rooms, but zero-student courses and
-insufficient seating prevent a complete timetable. Venue examination capacity
-remains an independently verified physical limit and is never set from demand.
+Deploy this dashboard with the updated backend: creation/generation response
+shapes and removed routes are breaking changes. This API update requires no new
+schema migration; existing scheduling migrations and safeguards still apply.

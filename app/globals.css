@@ -59,25 +59,32 @@ body {
   background: color-mix(in oklab, var(--unza-gold) 35%, white);
 }
 
-/* The current guide step points to the real, usable workflow tab. */
-[data-guide-pointer] {
-  position: relative;
-  outline: 3px solid #b78a28;
+/* Consistent spacing and keyboard focus throughout exam management. */
+.exam-management .exam-panel > p { line-height: 1.65; }
+.exam-management .exam-panel form label:has(input:not([type="checkbox"])),
+.exam-management .exam-panel form label:has(select),
+.exam-management .exam-panel form label:has(textarea) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 0;
+}
+.exam-management input:not([type="checkbox"]),
+.exam-management select,
+.exam-management textarea { max-width: 100%; }
+.exam-management input[type="checkbox"] { accent-color: var(--ink); width: 1rem; height: 1rem; }
+.exam-management :is(button, summary, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--unza-green);
   outline-offset: 3px;
-  scroll-margin-block: 5rem;
 }
-[data-guide-pointer]::after {
-  content: attr(data-guide-pointer);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  border-radius: 6px;
-  padding: 3px 8px;
-  background: #172033;
-  color: white;
-  font-size: 12px;
-  pointer-events: none;
+.exam-management table { min-width: 34rem; }
+.exam-management tbody tr:nth-child(even) { background: #f8fafc; }
+.exam-management tbody tr:hover { background: var(--surface-muted); }
+@media (prefers-reduced-motion: reduce) {
+  .exam-management * { scroll-behavior: auto !important; transition: none !important; }
 }
-nav[aria-label="Examination workflow"] { row-gap: 2.5rem; padding-top: 2rem; }
+
+.exam-management .ui-select { vertical-align: middle; }
+.exam-management .exam-panel form label:has(.ui-select) { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; min-width: 0; }

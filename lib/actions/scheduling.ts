@@ -1,7 +1,7 @@
 "use server";
 import { apiRequest, ApiError } from "@/lib/api/client";
 
-type Operation = "amendments" | "proposeAmendment" | "decideAmendment" | "applyAmendment" | "notifications" | "retryNotifications" | "requests" | "request" | "decision" | "lecturers" | "capacityDraft" | "list" | "detail" | "create" | "setup" | "courses" | "select" | "generate" | "reset" | "move" | "alternatives" | "staffing" | "assign" | "autoAssign" | "cancel" | "validate" | "publish" | "venues" | "capacity" | "unavailability" | "unavailable" | "audit" | "history";
+type Operation = "defaults" | "amendments" | "proposeAmendment" | "decideAmendment" | "applyAmendment" | "notifications" | "retryNotifications" | "requests" | "request" | "decision" | "lecturers" | "capacityDraft" | "list" | "detail" | "create" | "setup" | "courses" | "generate" | "move" | "alternatives" | "staffing" | "assign" | "autoAssign" | "cancel" | "validate" | "publish" | "venues" | "capacity" | "unavailability" | "unavailable" | "audit" | "history";
 export async function schedulingAction(operation: Operation, id = 0, body?: unknown, exam = 0, venue = 0, staff = 0) {
   const base = "/api/admin/examination-periods";
   const routes: Record<Operation, [string, string]> = {
@@ -11,9 +11,10 @@ export async function schedulingAction(operation: Operation, id = 0, body?: unkn
     requests:[`/api/examination-change-requests?periodId=${id}`,"GET"], request:["/api/examination-change-requests","POST"],
     decision:[`/api/examination-change-requests/${exam}/decision`,"POST"], lecturers:[`/api/examination-change-requests/capacity-lecturers?periodId=${id}&courseCode=${encodeURIComponent(String(body??""))}`,"GET"],
     capacityDraft:["/api/examination-change-requests/capacity-draft","POST"],
+    defaults: [`${base}/defaults`,"GET"],
     list: [base,"GET"], detail: [`${base}/${id}`,"GET"], create:[base,"POST"], setup:[`${base}/${id}?revision=${exam}`,"PUT"],
-    courses:[`${base}/${id}/courses`,"GET"], select:[`${base}/${id}/courses`,"PUT"], generate:[`${base}/${id}/generate`,"POST"],
-    reset:[`${base}/${id}/reset-draft`,"POST"], move:[`${base}/${id}/exams/${exam}/placement`,"PUT"], alternatives:[`${base}/${id}/exams/${exam}/alternatives`,"GET"],
+    courses:[`${base}/${id}/courses`,"GET"], generate:[`${base}/${id}/generate`,"POST"],
+    move:[`${base}/${id}/exams/${exam}/placement`,"PUT"], alternatives:[`${base}/${id}/exams/${exam}/alternatives`,"GET"],
     staffing:[`/api/admin/invigilator-assignments/exam-sessions/${exam}/staffing`,"GET"], assign:[`${base}/${id}/invigilators`,"POST"],
     autoAssign:[`${base}/${id}/auto-assign-invigilators`,"POST"], cancel:[`/api/admin/invigilator-assignments/${exam}/${venue}/${staff}/cancel`,"POST"],
     validate:[`${base}/${id}/validation`,"GET"], publish:[`${base}/${id}/publish`,"POST"], venues:[`${base}/venues`,"GET"],

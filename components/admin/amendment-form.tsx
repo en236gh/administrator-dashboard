@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
 type Row = Record<string, unknown>;
@@ -37,14 +38,14 @@ export function AmendmentForm({ revision, exams, venues, disabled, onSubmit }: {
     });
   }
   return <form onSubmit={submit}><fieldset disabled={disabled} className="space-y-3">
-    <label>Examination <select className={field} name="exam" required>{exams.map(e => <option key={String(e.exam_session_id)} value={Number(e.exam_session_id)}>{String(e.course_code)}</option>)}</select></label>
+    <label>Examination <Select aria-label="Examination" className={field} name="exam" required>{exams.map(e => <option key={String(e.exam_session_id)} value={Number(e.exam_session_id)}>{String(e.course_code)}</option>)}</Select></label>
     <label className="block">Proposed date <input className={field} name="date" type="date" required /></label>
     <label className="block">Start time <input className={field} name="time" type="time" required /></label>
-    <label className="block"><input type="checkbox" checked={changeVenues} onChange={e => setChangeVenues(e.target.checked)} /> Replace the retained venue set</label>
-    {changeVenues && <div className="space-y-2"><p>Select the complete proposed venue set. Student allocations are recalculated and validated by the server.</p>{venues.map(v => <label className="block" key={String(v.venue_id)}><input type="checkbox" name="venue" value={Number(v.venue_id)} /> {String(v.venue_name)} · exam seats {String(v.examination_capacity ?? "unverified")}</label>)}</div>}
-    <label className="block"><input type="checkbox" checked={changeDuties} onChange={e => setChangeDuties(e.target.checked)} /> Replace the retained invigilator duties</label>
-    {changeDuties && <div className="space-y-2"><p>Enter the complete proposed duty set. The server checks staff eligibility, availability and venue staffing requirements.</p>{duties.map((d, i) => <div className="flex flex-wrap gap-2" key={i}>
-      <label>Duty venue <select className={field} required value={d.venueId} onChange={e => setDuties(rows => rows.map((row, n) => n === i ? { ...row, venueId: e.target.value } : row))}><option value="">Select venue</option>{venues.map(v => <option key={String(v.venue_id)} value={Number(v.venue_id)}>{String(v.venue_name)}</option>)}</select></label>
+    <label className="block"><input type="checkbox" checked={changeVenues} onChange={e => setChangeVenues(e.target.checked)} /> Change venues</label>
+    {changeVenues && <div className="space-y-2"><div className="flex gap-2"><Button type="button" variant="secondary" size="sm" onClick={e=>e.currentTarget.form?.querySelectorAll<HTMLInputElement>('input[name="venue"]').forEach(input=>{input.checked=true;})}>Select all venues</Button><Button type="button" variant="ghost" size="sm" onClick={e=>e.currentTarget.form?.querySelectorAll<HTMLInputElement>('input[name="venue"]').forEach(input=>{input.checked=false;})}>Clear venues</Button></div>{venues.map(v => <label className="block" key={String(v.venue_id)}><input type="checkbox" name="venue" value={Number(v.venue_id)} /> {String(v.venue_name)} · exam seats {String(v.examination_capacity ?? "unverified")}</label>)}</div>}
+    <label className="block"><input type="checkbox" checked={changeDuties} onChange={e => setChangeDuties(e.target.checked)} /> Change invigilator duties</label>
+    {changeDuties && <div className="space-y-2"><p>Add all replacement duties.</p>{duties.map((d, i) => <div className="flex flex-wrap gap-2" key={i}>
+      <label>Duty venue <Select aria-label="Duty venue" className={field} required value={d.venueId} onChange={e => setDuties(rows => rows.map((row, n) => n === i ? { ...row, venueId: e.target.value } : row))}><option value="">Select venue</option>{venues.map(v => <option key={String(v.venue_id)} value={Number(v.venue_id)}>{String(v.venue_name)}</option>)}</Select></label>
       <label>Staff ID <input className={field} type="number" min={1} required value={d.staffId} onChange={e => setDuties(rows => rows.map((row, n) => n === i ? { ...row, staffId: e.target.value } : row))} /></label>
       <Button type="button" variant="secondary" disabled={duties.length === 1} onClick={() => setDuties(rows => rows.filter((_, n) => n !== i))}>Remove duty</Button>
     </div>)}<Button type="button" variant="secondary" onClick={() => setDuties(rows => [...rows, { venueId: "", staffId: "" }])}>Add duty</Button></div>}
